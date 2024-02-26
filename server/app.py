@@ -112,6 +112,31 @@ def create_property():
 
     except Exception as e:
         return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
+    
+@app.route("/get_property_by_id/<int:property_id>", methods=["GET"])
+def get_property_by_id(property_id):
+    try:
+        property_details = Property.query.get(property_id)
+        if not property_details:
+            return (
+                jsonify({"error": True, "message": "Property not found"}),
+                404,
+            )
+
+        property_info = {
+            "title": property_details.title,
+            "description": property_details.description,
+            "price": property_details.price,
+            "bedrooms": property_details.bedrooms,
+            "bathrooms": property_details.bathrooms,
+            "location": property_details.location,
+            "image_link": property_details.image_link,
+        }
+
+        return jsonify({"property": property_info}), 200
+
+    except Exception as e:
+        return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
 
 @app.route("/get_all_properties", methods=["GET"])
 def get_all_properties():
@@ -132,6 +157,69 @@ def get_all_properties():
     except Exception as e:
         return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
     
+@app.route("/update_property/<int:property_id>", methods=["PATCH"])
+def update_property(property_id):
+    try:
+        data = request.get_json()
+        if not data or not isinstance(data, dict):
+            return (
+                jsonify({"error": True, "message": "Invalid JSON data in request"}),
+                400,
+            )
+
+        property_to_update = Property.query.get(property_id)
+        if not property_to_update:
+            return (
+                jsonify({"error": True, "message": "Property not found"}),
+                404,
+            )
+
+        for key, value in data.items():
+            if hasattr(property_to_update, key):
+                setattr(property_to_update, key, value)
+
+        db.session.commit()
+
+        return (
+            jsonify(
+                {
+                    "id": property_to_update.id,
+                    "title": property_to_update.title,
+                    "message": "Property updated successfully",
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
+    
+@app.route("/delete_property/<int:property_id>", methods=["DELETE"])
+def delete_property(property_id):
+    try:
+        property_to_delete = Property.query.get(property_id)
+        if not property_to_delete:
+            return (
+                jsonify({"error": True, "message": "Property not found"}),
+                404,
+            )
+
+        db.session.delete(property_to_delete)
+        db.session.commit()
+
+        return (
+            jsonify(
+                {
+                    "id": property_to_delete.id,
+                    "message": "Property deleted successfully",
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
+
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
     try:
