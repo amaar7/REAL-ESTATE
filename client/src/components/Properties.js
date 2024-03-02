@@ -3,6 +3,8 @@ import './Properties.css';
 
 function Properties() {
   const [properties, setProperties] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const propertiesPerPage = 12;
 
   useEffect(() => {
     // Fetch properties from the backend API
@@ -14,11 +16,32 @@ function Properties() {
       .catch(error => console.error('Error fetching properties:', error));
   }, []);
 
+  // Calculate pagination
+  const indexOfLastProperty = currentPage * propertiesPerPage;
+  const indexOfFirstProperty = indexOfLastProperty - propertiesPerPage;
+  const currentProperties = properties.slice(indexOfFirstProperty, indexOfLastProperty);
+
+  const nextPage = () => {
+    if (indexOfLastProperty < properties.length) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   return (
     <div className="properties-container">
       <h2>Properties</h2>
+      <div className="pagination">
+        <button onClick={prevPage}>Prev</button>
+        <button onClick={nextPage}>Next</button>
+      </div>
       <div className="property-grid">
-        {properties.map(property => (
+        {currentProperties.map(property => (
           <div key={property.title} className="property-card">
             <img src={property.image_link} alt={property.title} />
             <div className="property-details">
