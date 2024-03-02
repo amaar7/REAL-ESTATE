@@ -1,23 +1,34 @@
 import React, { useState, useEffect } from 'react';
+import './Properties.css';
 
 function Properties() {
   const [properties, setProperties] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:4000/get_all_properties')
+    // Fetch properties from the backend API
+    fetch("/get_all_properties")
       .then(response => response.json())
-      .then(data => setProperties(data.properties))
+      .then(data => {
+        setProperties(data.properties);
+      })
       .catch(error => console.error('Error fetching properties:', error));
   }, []);
 
   return (
-    <div>
+    <div className="properties-container">
       <h2>Properties</h2>
-      <ul>
+      <div className="property-grid">
         {properties.map(property => (
-          <li key={property.title}>{property.title} - {property.price} - {property.location}</li>
+          <div key={property.title} className="property-card">
+            <img src={property.image_link} alt={property.title} />
+            <div className="property-details">
+              <h3>{property.title}</h3>
+              <p>{property.location}</p>
+              <p>${property.price}</p>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

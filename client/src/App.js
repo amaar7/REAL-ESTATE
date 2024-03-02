@@ -1,8 +1,12 @@
+// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import Users from './components/Users';
+import Home from './components/Home';
 import Properties from './components/Properties';
-import Bookings from './components/Bookings';
+import Booking from './components/Booking';
+import SignIn from './components/SignIn';
+import SignUp from './components/SignUp';
+import './App.css';
 
 function App() {
   return (
@@ -11,21 +15,29 @@ function App() {
         <nav>
           <ul>
             <li>
-              <Link to="/users">Users</Link>
+              <Link to="/">Home</Link>
             </li>
             <li>
               <Link to="/properties">Properties</Link>
             </li>
             <li>
-              <Link to="/bookings">Bookings</Link>
+              <Link to="/booking">Booking</Link>
+            </li>
+            <li>
+              <Link to="/signin">Sign In</Link>
+            </li>
+            <li>
+              <Link to="/signup">Sign Up</Link>
             </li>
           </ul>
         </nav>
 
         <Routes>
-          <Route path="/users" element={<Users />} />
+          <Route path="/" element={<Home />} />
           <Route path="/properties" element={<Properties />} />
-          <Route path="/bookings" element={<Bookings />} />
+          <Route path="/booking" element={<Booking />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
         </Routes>
       </div>
     </Router>
