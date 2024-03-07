@@ -1,23 +1,34 @@
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from sqlalchemy import text
 from models import db, Property, User, Booking
 from datetime import datetime
-from flask_cors import CORS
+from key import secret_key
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///real_estate.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["JWT_SECRET_KEY"] = "secret_key"  
 migrate = Migrate(app, db)
 db.init_app(app)
 CORS(app)
+jwt = JWTManager(app)
 
 @app.route("/")
 def home():
     data = {"Server side": "Real Estate"}
     return jsonify(data), 200
+
+@app.route("/protected_route", methods=["GET"])
+@jwt_required()
+def protected_route():
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
 
 @app.route("/user_signup", methods=["POST"])
 def create_user():
@@ -72,7 +83,9 @@ def user_signin():
         user = User.query.filter_by(username=data["username"]).first()
 
         if user and bcrypt.check_password_hash(user.password, data["password"]):
-            return jsonify({"message": "User signed in successfully"}), 200
+            # Create JWT token
+            access_token = create_access_token(identity={"username": user.username})
+            return jsonify({"access_token": access_token}), 200
         else:
             return jsonify({"error": True, "message": "Invalid username or password"}), 401
 
