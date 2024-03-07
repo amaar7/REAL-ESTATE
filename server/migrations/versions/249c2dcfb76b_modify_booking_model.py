@@ -1,8 +1,8 @@
-"""Initial migration
+"""Modify Booking model
 
-Revision ID: 3c9e357f27f5
+Revision ID: 249c2dcfb76b
 Revises: 
-Create Date: 2024-02-26 15:12:12.175184
+Create Date: 2024-03-05 15:59:32.192606
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '3c9e357f27f5'
+revision = '249c2dcfb76b'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -44,7 +44,6 @@ def upgrade():
     sa.Column('property_id', sa.Integer(), nullable=False),
     sa.Column('check_in_date', sa.Date(), nullable=False),
     sa.Column('check_out_date', sa.Date(), nullable=False),
-    sa.Column('property_image_link', sa.String(length=255), nullable=True),
     sa.ForeignKeyConstraint(['property_id'], ['property.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')

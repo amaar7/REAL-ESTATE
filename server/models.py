@@ -31,7 +31,6 @@ class Booking(db.Model):
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
     check_in_date = db.Column(db.Date, nullable=False)
     check_out_date = db.Column(db.Date, nullable=False)
-    property_image_link = db.Column(db.String(255)) 
 
     def __repr__(self):
-        return f"Booking(User ID: {self.user_id}, Property ID: {self.property_id}, Check-in: {self.check_in_date}, Check-out: {self.check_out_date}, Property Image Link: {self.property_image_link})"
+        return f"Booking(User ID: {self.user_id}, Property ID: {self.property_id}, Check-in: {self.check_in_date}, Check-out: {self.check_out_date})"

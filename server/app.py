@@ -1,8 +1,10 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
 from models import db, Property, User, Booking
+from datetime import datetime
+from flask_cors import CORS
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -10,6 +12,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///real_estate.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 migrate = Migrate(app, db)
 db.init_app(app)
+CORS(app)
 
 @app.route("/")
 def home():
@@ -52,6 +55,77 @@ def create_user():
                 }
             ),
             201,
+        )
+
+    except Exception as e:
+        return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
+    
+@app.route("/user_signin", methods=["POST"])
+def user_signin():
+    try:
+        data = request.get_json()
+        required_fields = ["username", "password"]
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({"error": True, "message": f"Missing or empty {field}"}), 400
+
+        user = User.query.filter_by(username=data["username"]).first()
+
+        if user and bcrypt.check_password_hash(user.password, data["password"]):
+            return jsonify({"message": "User signed in successfully"}), 200
+        else:
+            return jsonify({"error": True, "message": "Invalid username or password"}), 401
+
+    except Exception as e:
+        return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
+
+@app.route("/delete_user/<int:user_id>", methods=["DELETE"])
+def delete_user(user_id):
+    try:
+        user_to_delete = User.query.get(user_id)
+        if not user_to_delete:
+            return jsonify({"error": True, "message": "User not found"}), 404
+
+        db.session.delete(user_to_delete)
+        db.session.commit()
+
+        return jsonify({"id": user_to_delete.id, "message": "User deleted successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
+
+@app.route("/update_user/<int:user_id>", methods=["PATCH"])
+def update_user(user_id):
+    try:
+        data = request.get_json()
+        if not data or not isinstance(data, dict):
+            return (
+                jsonify({"error": True, "message": "Invalid JSON data in request"}),
+                400,
+            )
+
+        user_to_update = User.query.get(user_id)
+        if not user_to_update:
+            return (
+                jsonify({"error": True, "message": "User not found"}),
+                404,
+            )
+
+        for key, value in data.items():
+            if hasattr(user_to_update, key):
+                setattr(user_to_update, key, value)
+
+        db.session.commit()
+
+        return (
+            jsonify(
+                {
+                    "id": user_to_update.id,
+                    "username": user_to_update.username,
+                    "message": "User updated successfully",
+                }
+            ),
+            200,
         )
 
     except Exception as e:
@@ -144,6 +218,7 @@ def get_all_properties():
         properties = Property.query.all()
         property_list = [
             {
+                "id": prop.id,
                 "title": prop.title,
                 "price": prop.price,
                 "location": prop.location,
@@ -156,7 +231,6 @@ def get_all_properties():
 
     except Exception as e:
         return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
-    
 @app.route("/update_property/<int:property_id>", methods=["PATCH"])
 def update_property(property_id):
     try:
@@ -224,26 +298,23 @@ def delete_property(property_id):
 def create_booking():
     try:
         data = request.get_json()
-        if not data or not isinstance(data, dict):
-            return (
-                jsonify({"error": True, "message": "Invalid JSON data in request"}),
-                400,
-            )
 
-        required_fields = ["user_id", "property_id", "check_in_date", "check_out_date", "property_image_link"]
+        if not data or not isinstance(data, dict):
+            return jsonify({"error": True, "message": "Invalid JSON data in request"}), 400
+
+        required_fields = ["user_id", "property_id", "check_in_date", "check_out_date"]
         for field in required_fields:
             if field not in data or not data[field]:
-                return (
-                    jsonify({"error": True, "message": f"Missing or empty {field}"}),
-                    400,
-                )
+                return jsonify({"error": True, "message": f"Missing or empty {field}"}), 400
+
+        data["check_in_date"] = datetime.strptime(data["check_in_date"], "%dth %b %Y")
+        data["check_out_date"] = datetime.strptime(data["check_out_date"], "%dth %b %Y")
 
         new_booking = Booking(
             user_id=data["user_id"],
             property_id=data["property_id"],
             check_in_date=data["check_in_date"],
             check_out_date=data["check_out_date"],
-            property_image_link=data["property_image_link"], 
         )
         db.session.add(new_booking)
         db.session.commit()
@@ -254,6 +325,8 @@ def create_booking():
                     "id": new_booking.id,
                     "user_id": new_booking.user_id,
                     "property_id": new_booking.property_id,
+                    "check_in_date": new_booking.check_in_date.strftime("%dth %b %Y"),
+                    "check_out_date": new_booking.check_out_date.strftime("%dth %b %Y"),
                     "message": "Booking created successfully",
                 }
             ),
@@ -263,25 +336,79 @@ def create_booking():
     except Exception as e:
         return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
 
+    
 @app.route("/get_all_bookings", methods=["GET"])
 def get_all_bookings():
     try:
         bookings = Booking.query.all()
-        booking_list = [
-            {
-                "user_id": booking.user_id,
-                "property_id": booking.property_id,
-                "check_in_date": str(booking.check_in_date),
-                "check_out_date": str(booking.check_out_date),
-                "property_image_link": booking.property_image_link,  # Add this line
-            }
-            for booking in bookings
-        ]
+        booking_list = []
+
+        for booking in bookings:
+            property_details = Property.query.get(booking.property_id)
+
+            if property_details:
+                booking_info = {
+                    "user_id": booking.user_id,
+                    "property_id": booking.property_id,
+                    "check_in_date": str(booking.check_in_date),
+                    "check_out_date": str(booking.check_out_date),
+                    "property_image_link": property_details.image_link,
+                }
+                booking_list.append(booking_info)
 
         return jsonify({"bookings": booking_list}), 200
 
     except Exception as e:
         return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
+        
+@app.route("/booking/<int:booking_id>")
+def get_booking(booking_id):
+    try:
+        booking_details = Booking.query.get(booking_id)
+        if not booking_details:
+            return (
+                jsonify({"error": True, "message": "Booking not found"}),
+                404,
+            )
 
+        booking_info = {
+            "user_id": booking_details.user_id,
+            "property_id": booking_details.property_id,
+            "check_in_date": str(booking_details.check_in_date),
+            "check_out_date": str(booking_details.check_out_date),
+            "property_image_link": booking_details.property_image_link,
+        }
+
+        return jsonify({"booking": booking_info}), 200
+
+    except Exception as e:
+        return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
+
+@app.route("/delete_booking/<int:booking_id>", methods=["DELETE"])
+def delete_booking(booking_id):
+    try:
+        booking_to_delete = Booking.query.get(booking_id)
+        if not booking_to_delete:
+            return (
+                jsonify({"error": True, "message": "Booking not found"}),
+                404,
+            )
+
+        db.session.delete(booking_to_delete)
+        db.session.commit()
+
+        return (
+            jsonify(
+                {
+                    "id": booking_to_delete.id,
+                    "message": "Booking deleted successfully",
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        return jsonify({"error": True, "message": f"An error occurred: {str(e)}"}), 500
+    
 if __name__ == "__main__":
     app.run(port=4000, debug=True)
