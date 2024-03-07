@@ -1,25 +1,32 @@
+/* Properties.css */
 .properties-container {
-  padding: 20px;
-  text-align: center;
+  margin: 20px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 
 .property-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
 }
 
 .property-card {
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .property-card img {
   width: 100%;
   height: 150px;
   object-fit: cover;
+  border-bottom: 1px solid #ddd;
 }
 
 .property-details {
@@ -33,25 +40,25 @@
 .property-details p {
   margin: 5px 0;
 }
-
-.pagination {
-  margin-top: 20px;
+.success-message {
+  background-color: #4CAF50; /* Green background color */
+  color: #fff; /* White text color */
+  padding: 20px; /* Increase padding for better visibility */
+  border-radius: 5px; /* Rounded corners */
+  text-align: center; /* Center the text */
+  margin: 20px 63px; /* Adjust margin for centering and spacing */
+  display: none; /* Initially hide the success message */
+  width: 90%; /* Set a specific width for the success message */
+  font-size: 18px; /* Increase font size for better readability */
 }
 
-.pagination button {
-  background-color: #4caf50;
-  color: white;
-  border: 1px solid #4caf50;
-  padding: 8px 16px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 4px;
-  margin: 0 4px;
+/* Optional animation for a fade-in effect */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.pagination button:hover {
-  background-color: #45a049;
+.success-message.show {
+  animation: fadeIn 0.5s ease-in-out; /* Apply the fade-in animation */
+  display: inline-block; /* Show the success message and make it fit the content */
 }

@@ -1,0 +1,37 @@
+/* Booking.css */
+.booking-container {
+    margin: 20px;
+  }
+  
+  .booked-properties {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .booked-property-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .booked-property-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .booked-property-details {
+    padding: 10px;
+  }
+  
+  .booked-property-details h3 {
+    margin: 0;
+  }
+  
+  .booked-property-details p {
+    margin: 5px 0;
+  }
+  
